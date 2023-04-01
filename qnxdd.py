@@ -4,13 +4,14 @@ of the QNX Demodisk released in the 90s and its associated extensions.
 """
 
 __author__ = "Philip Barton"
-__version__ = "1.4.5"
+__version__ = "1.5.0"
 __license__ = "MIT"
 
 
 import bz2
 import math
 import binascii
+from more_itertools import ilen
 
 
 XOR_KEY = [b"\x1f",b"\x43",b"\x60",b"\x6d",b"\x1f",b"\x47",b"\x68",b"\x6b",b"\x63",b"\x64",b"\x61",b"\x71",
@@ -549,6 +550,14 @@ class Ramdisk:
         self._raw[self.SECTOR_MAP_START:self.SECTOR_MAP_START + len(updated_map)] = updated_map
 
 
+    def _rm_entry(self, in_entry):
+        sectors = self._get_sector_list(in_entry)
+        for sector in sectors:
+            self._zero_sector(sector)
+        self._write_entry(Entry(), in_entry.fat_offset)
+        self._optimize()
+
+
     def ls(self):
         """ Pretty print a directory listing.
         
@@ -749,7 +758,7 @@ class Ramdisk:
             self._write_entry(entry, entry.fat_offset)
             return True
         return False
-
+    
 
     def rm(self, in_name):
         """ Remove the specified file Entry.
@@ -761,11 +770,32 @@ class Ramdisk:
         """
 
         if entry := self._get_entry(in_name, "file"):
-            sectors = self._get_sector_list(entry)
-            for sector in sectors:
-                self._zero_sector(sector)
-            self._write_entry(Entry(), entry.fat_offset)
-            self._optimize()
+            self._rm_entry(entry)
+            return True
+        return False
+    
+
+    def rmdir(self, in_name):
+        """ Remove the specified directory Entry.
+        
+            Checks whether or not the specified directory exists and is empty,
+            then deletes it if conditions are met.
+
+            Args:
+                in_name (str): Name of the Entry to remove.
+
+            Returns (bool): Succeed/fail.
+        """
+
+        if entry := self._get_entry(in_name, "dir"):
+            contents = list(filter(
+                lambda x:
+                    True if x.etype == "file" or x.etype == "dir" else False,
+                self._get_dir_contents(entry)
+            ))
+            if contents:
+                return False
+            self._rm_entry(entry)
             return True
         return False
 
@@ -854,7 +884,7 @@ class Entry:
     }
     CONTAINS_OFFSET = 56
     NAME_OFFSET = 64        # 'dir' and 'file' name offsets
-    NAME_LENGTH = 32        # Probably not true, but we need to zero-pad the tail.
+    NAME_LENGTH = 48        # The filesystem begins to choke beyond this limit
     DEST_OFFSET = 115
 
 
@@ -866,6 +896,30 @@ class Entry:
         elif not in_entry:
             self._raw = bytearray([0] * self.ENTRY_SIZE)
         return
+    
+
+    def _is_invalid_char(self, in_char):
+        """ Check ascii encoded character for validity.
+        
+            Used to filter filenames passed to self.name setter. QNX disallows
+            control characters (0x01-0x1f), "/" (0x2f), DEL (0x7f), and 0xff
+            within names of files and directories. There does not appear to be
+            a limitation on what a name may begin with, either.
+
+            Args:
+                in_char (str): The ascii encoded character to test.
+            
+            Returns (bool): True/False to be used by filter().
+        """
+
+        if in_char <= 0x1f:
+            return True
+        
+        match in_char:
+            case 0x2f | 0x7f | 0xff:
+                return True
+            case _:
+                return False
 
 
     @property
@@ -950,10 +1004,9 @@ class Entry:
         """ Set name.
 
             Sets provided value for Entry of type "dir" or "file". Limits in_name
-            to 32 characters. Does not check for disallowed characters, as I'm not
-            entirely sure what the full list is. Given the current architecture,
-            there is no way to know whether the name being set is already in use
-            elsewhere.
+            to 48 characters. Checks for disallowed characters. Given the current
+            architecture, there is no way to know whether the name being set is
+            already in use elsewhere.
 
             Args:
                 in_name (str): Name for Entry.
@@ -963,6 +1016,11 @@ class Entry:
 
         if len(in_name) >= self.NAME_LENGTH:
             in_name = in_name[0:self.NAME_LENGTH]
+
+        invalid = ilen(filter(self._is_invalid_char, in_name.encode('ascii')))
+
+        if invalid:
+            return
 
         if self.etype == "dir" or self.etype == "file":
             name_bytes = bytearray(in_name.encode())

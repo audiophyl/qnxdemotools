@@ -12,10 +12,10 @@
 """
 
 __author__ = "Philip Barton"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __license__ = "MIT"
 
-MIN_PYTHON = (3, 8)
+MIN_PYTHON = (3, 10)    # This code makes use of match/case, so Python 3.10+
 
 
 import argparse
@@ -45,6 +45,7 @@ def main(args):
         command = "welcome"
 
     while command != "exit":
+        command = command.split("#")[0]
         command = command.split(" ")
 
         match command[0]:
@@ -73,15 +74,20 @@ def main(args):
             
             case "rm":
                 if len(command) == 1:
-                    print(f"Usage:\n\t'rm <filename>")
+                    print(f"Usage:\n\t'rm <filename>'")
                 else:
                     if not ramdisk.rm(command[1]):
                         print(f"Invalid file {command[1]}.")
                         script_fault = True if script_buffer else False
             
             case "rmdir":
-                print(f"Not yet implemented.")
-                
+                if len(command) == 1:
+                    print(f"Usage:\n\t'rmdir <dirname>'")
+                else:
+                    if not ramdisk.rmdir(command[1]):
+                        print(f"Couldn't delete directory {command[1]}.")
+                        script_fault = True if script_buffer else False
+
             case "inject":
                 if len(command) == 1:
                     print(f"Usage:\n\t'inject <filename>")
@@ -92,7 +98,7 @@ def main(args):
 
             case "flags":
                 if len(command) < 3:
-                    print(f"Usage:\n\t'flags <filename> <flag_string>")
+                    print(f"Usage:\n\t'flags <filename> <flag_string>'")
                 else:
                     if not ramdisk.flags(command[1], command[2]):
                         print(f"Error setting flags for {command[1]}.")
@@ -126,7 +132,7 @@ def main(args):
                 print(f"{'ls:' : <9}List directory contents.")
                 print(f"{'cd:' : <9}Change directory.")
                 print(f"{'rm:' : <9}Remove a file.")
-                #print(f"{'rmdir:' : <9}Remove a directory.")
+                print(f"{'rmdir:' : <9}Remove a directory.")
                 print(f"{'dump:' : <9}Dump a single file's contents.")
                 print(f"{'inject:' : <9}Inject a file into the ramdisk.")
                 print(f"{'flags:' : <9}Set the flags on a file or dir.")
