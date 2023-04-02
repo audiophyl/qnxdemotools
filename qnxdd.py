@@ -126,7 +126,6 @@ def decomp_enigma(in_data):
             current_byte += seg_size
             token_stack = []
             for token in comp_bin:
-                #token = token.to_bytes(1, byteorder="big")
                 token_stack.append(token)
                 while token_stack:
                     temp_token = token_stack.pop(-1)
