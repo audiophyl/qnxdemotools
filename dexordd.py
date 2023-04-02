@@ -10,7 +10,7 @@ Use to unpack/pack files from/into the QNX demodisk from the 90s.
 
 
 __author__ = "Philip Barton"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __license__ = "MIT"
 
 
@@ -36,14 +36,14 @@ def main(args):
             print(f"{e}")
         
         if os.path.isdir(args.working_dir[0]):
-            input_file = b''
+            input_file = bytearray()
 
             try:
                 with open(args.input_file[0], "rb") as in_f:
                     with open(args.working_dir[0] + "/boot_stage_1_and_2.bin", "wb") as out_f:
                         out_f.write(in_f.read(QNX_DEMODISK_DATA_OFFSET))
                     in_f.seek(QNX_DEMODISK_DATA_OFFSET)
-                    input_file = in_f.read()
+                    input_file.extend(bytearray(in_f.read()))
             except Exception as e:
                 quit(f"Couldn't output boot_stage_1_and_2.bin. Error: {e}.")
 

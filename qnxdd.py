@@ -4,7 +4,7 @@ of the QNX Demodisk released in the 90s and its associated extensions.
 """
 
 __author__ = "Philip Barton"
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 __license__ = "MIT"
 
 
@@ -14,9 +14,8 @@ import binascii
 from more_itertools import ilen
 
 
-XOR_KEY = [b"\x1f",b"\x43",b"\x60",b"\x6d",b"\x1f",b"\x47",b"\x68",b"\x6b",b"\x63",b"\x64",b"\x61",b"\x71",
-            b"\x60",b"\x6d",b"\x63",b"\x1f",b"\x62",b"\x71",b"\x64",b"\x60",b"\x73",b"\x6e",b"\x71",b"\x1f",
-            b"\x6e",b"\x65",b"\x1f",b"\x63",b"\x64",b"\x6c",b"\x6e",b"\x63",b"\x68",b"\x72",b"\x6a",b"\x1f"]
+XOR_KEY = [31, 67, 96, 109, 31, 71, 104, 107, 99, 100, 97, 113, 96, 109, 99, 31, 98, 113, 100, 96, 115, 110,
+           113, 31, 110, 101, 31, 99, 100, 108, 110, 99, 104, 114, 106, 31]
 SEGMENT_SIZE = 512
 QZ_MAGIC_1 = b'\x51\x5a\x68'
 QZ_MAGIC_2 = b'\x31\x41\x59\x26\x53\x59'
@@ -32,28 +31,18 @@ def xor_cipher(in_data):
         Returns: The ciphered/deciphered data.
     """
 
-    return_bytes = b''
+    in_data_len = len(in_data)
+    offset = 0
 
-    while True:
-        current_segment = b''
+    while offset < in_data_len:
+        segment_len = SEGMENT_SIZE if offset + SEGMENT_SIZE < in_data_len else in_data_len - offset
 
-        if len(in_data) >= SEGMENT_SIZE:
-            segment = in_data[0:SEGMENT_SIZE]
-            in_data = in_data[SEGMENT_SIZE:]
-        else:
-            segment = in_data[0:len(in_data)]
-            in_data = b''
+        for i in range(segment_len):
+            in_data[offset + i] = in_data[offset + i] ^ XOR_KEY[i % len(XOR_KEY)]
 
-        if not segment:
-            break
+        offset += segment_len
 
-        for index, byte in enumerate(segment):
-            out_byte = byte ^ int.from_bytes(XOR_KEY[index % len(XOR_KEY)], "big")
-            current_segment += int.to_bytes(out_byte, 1, "big")
-
-        return_bytes += current_segment
-
-    return return_bytes
+    return in_data
 
 
 def decomp_enigma(in_file, offset):
