@@ -4,7 +4,7 @@ of the QNX Demodisk released in the 90s and its associated extensions.
 """
 
 __author__ = "Philip Barton"
-__version__ = "1.6.0"
+__version__ = "1.6.1"
 __license__ = "MIT"
 
 
@@ -14,8 +14,9 @@ import binascii
 from more_itertools import ilen
 
 
-XOR_KEY = [31, 67, 96, 109, 31, 71, 104, 107, 99, 100, 97, 113, 96, 109, 99, 31, 98, 113, 100, 96, 115, 110,
-           113, 31, 110, 101, 31, 99, 100, 108, 110, 99, 104, 114, 106, 31]
+XOR_KEY = [31, 67, 96, 109, 31, 71, 104, 107, 99, 100, 97, 113, 96, 109, 99,
+           31, 98, 113, 100, 96, 115, 110, 113, 31, 110, 101, 31, 99, 100, 108,
+           110, 99, 104, 114, 106, 31]
 SEGMENT_SIZE = 512
 QZ_MAGIC_1 = b'\x51\x5a\x68'
 QZ_MAGIC_2 = b'\x31\x41\x59\x26\x53\x59'
@@ -73,7 +74,7 @@ def decomp_enigma(in_file, offset):
 
             return_bytes = b''
 
-            while seg_size != 0:
+            while seg_size:
                 table1 = [x.to_bytes(1, byteorder="big") for x in range(256)]
                 table2 = [b'\x00'] * 256
                 table_index = 0
@@ -82,7 +83,7 @@ def decomp_enigma(in_file, offset):
                 if seg_size == 0:
                     continue
 
-                while (table_index < 256):            
+                while table_index < 256:
                     token = int.from_bytes(in_f.read(1), "big")
 
                     if token > 127:
@@ -110,7 +111,6 @@ def decomp_enigma(in_file, offset):
                                 test_byte = in_f.read(1)
                             table1[table_index] = test_byte
                             table2[table_index] = in_f.read(1)
-
                     table_index += 1
 
                 if table_index == 256:
@@ -120,7 +120,7 @@ def decomp_enigma(in_file, offset):
                     for token in comp_bin:
                         token = token.to_bytes(1, byteorder="big")
                         token_stack.append(token)
-                        while len(token_stack) > 0:
+                        while token_stack:
                             temp_token = token_stack.pop(-1)
                             if temp_token == table1[int.from_bytes(temp_token, "big")]:
                                 out_bin += temp_token
