@@ -58,6 +58,7 @@ def main(args):
             # Decompress the third stage bootloader.
             decompressed = qnxdd.decomp_enigma(deciphered[QNX_DATA_BOOTLOADER_OFFSET:])
 
+            # Dump the third stage bootloader to a separate file.
             try:
                 with open(args.working_dir[0] + "/boot_stage_3.bin", "wb") as out_f:
                     out_f.write(decompressed)
@@ -66,10 +67,8 @@ def main(args):
 
             # Dump the ramdisk to a separate file.
             try:
-                with open(args.working_dir[0] + "/deciphered.bin", "rb") as in_f:
-                    with open(args.working_dir[0] + "/boot_fs.ramdisk", "wb") as out_f:
-                        in_f.seek(QNX_DATA_RAMDISK_OFFSET)
-                        out_f.write(in_f.read())
+                with open(args.working_dir[0] + "/boot_fs.ramdisk", "wb") as out_f:
+                    out_f.write(deciphered[QNX_DATA_RAMDISK_OFFSET:])
             except Exception as e:
                 quit(f"Couldn't output boot_fs.ramdisk. Error: {e}.")
         else:
