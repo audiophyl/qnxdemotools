@@ -32,13 +32,14 @@ def xor_cipher(in_data):
     """
 
     in_data_len = len(in_data)
+    xor_key_len = len(XOR_KEY)
     offset = 0
 
     while offset < in_data_len:
         segment_len = SEGMENT_SIZE if offset + SEGMENT_SIZE < in_data_len else in_data_len - offset
 
         for i in range(segment_len):
-            in_data[offset + i] = in_data[offset + i] ^ XOR_KEY[i % len(XOR_KEY)]
+            in_data[offset + i] = in_data[offset + i] ^ XOR_KEY[i % xor_key_len]
 
         offset += segment_len
 
