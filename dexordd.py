@@ -10,7 +10,7 @@ Use to unpack/pack files from/into the QNX demodisk from the 90s.
 
 
 __author__ = "Philip Barton"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __license__ = "MIT"
 
 
