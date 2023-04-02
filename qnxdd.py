@@ -39,7 +39,7 @@ def xor_cipher(in_data):
         segment_len = SEGMENT_SIZE if offset + SEGMENT_SIZE < in_data_len else in_data_len - offset
 
         for i in range(segment_len):
-            in_data[offset + i] = in_data[offset + i] ^ XOR_KEY[i % xor_key_len]
+            in_data[offset + i] ^= XOR_KEY[i % xor_key_len]
 
         offset += segment_len
 
