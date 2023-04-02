@@ -47,7 +47,7 @@ def xor_cipher(in_data):
     return in_data
 
 
-def decomp_enigma(in_file, offset):
+def decomp_enigma(in_data):
     """ Decompression for the third stage bootloader. 
     
         We don't presently do anything with the decompressed data, so this
@@ -61,79 +61,84 @@ def decomp_enigma(in_file, offset):
         No comments are provided as an exercise to the reader.
 
         Args:
-            in_file: Input filename as string.
-            offset: Offset to begin reading compressed data.
+            in_data: Input data as bytearray.
 
         Returns: Decompressed data.
     """
 
     seg_size = -1
-    try:
-        with open(in_file, "rb") as in_f:
-            in_f.seek(offset)
+    return_bytes = bytearray()
+    current_byte = 0
 
-            return_bytes = b''
+    while seg_size:
+        table1 = bytearray(256)
+        for byte in range(256):
+            table1[byte] = byte
+        table2 = bytearray(256)
+        table_index = 0
 
-            while seg_size:
-                table1 = [x.to_bytes(1, byteorder="big") for x in range(256)]
-                table2 = [b'\x00'] * 256
-                table_index = 0
+        seg_size = int.from_bytes(in_data[current_byte:current_byte + 2], "big")
+        current_byte += 2
+        if seg_size == 0:
+            continue
 
-                seg_size = int.from_bytes(in_f.read(2), "big")
-                if seg_size == 0:
+        while table_index < 256:
+            token = in_data[current_byte]
+            current_byte += 1
+
+            if token > 127:
+                token -= 127
+                table_index += token
+                if table_index >= 256:
                     continue
-
-                while table_index < 256:
-                    token = int.from_bytes(in_f.read(1), "big")
-
-                    if token > 127:
-                        token -= 127
-                        table_index += token
-                        if table_index >= 256:
-                            continue
-                        test_byte = in_f.read(1)
-                        if int.from_bytes(test_byte, "big") == table_index:
-                            table_index += 1
-                            continue
-                        else:
-                            table1[table_index] = test_byte
-                            table2[table_index] = in_f.read(1)
-                    else:
-                        table1[table_index] = in_f.read(1)
-                        table2[table_index] = in_f.read(1)
-                        while token > 0:
-                            table_index += 1
-                            token -= 1
-                            test_byte = in_f.read(1)
-                            if int.from_bytes(test_byte, "big") == table_index:
-                                table_index += 1
-                                token -= 1
-                                test_byte = in_f.read(1)
-                            table1[table_index] = test_byte
-                            table2[table_index] = in_f.read(1)
+                test_byte = in_data[current_byte]
+                current_byte += 1
+                if test_byte == table_index:
                     table_index += 1
-
-                if table_index == 256:
-                    out_bin = b''
-                    comp_bin = in_f.read(seg_size)
-                    token_stack = []
-                    for token in comp_bin:
-                        token = token.to_bytes(1, byteorder="big")
-                        token_stack.append(token)
-                        while token_stack:
-                            temp_token = token_stack.pop(-1)
-                            if temp_token == table1[int.from_bytes(temp_token, "big")]:
-                                out_bin += temp_token
-                            else:
-                                token_stack.append(table2[int.from_bytes(temp_token, "big")])
-                                token_stack.append(table1[int.from_bytes(temp_token, "big")])
-                    return_bytes += out_bin
+                    continue
                 else:
-                    print(f"Invalid file.")
-                    return None
-    except Exception as e:
-        print(f"Couldn't open file for decompression. Error: {e}.")
-        return None
+                    table1[table_index] = test_byte
+                    table2[table_index] = in_data[current_byte]
+                    current_byte += 1
+            else:
+                table1[table_index] = in_data[current_byte]
+                current_byte += 1
+                table2[table_index] = in_data[current_byte]
+                current_byte += 1
+                while token > 0:
+                    table_index += 1
+                    token -= 1
+                    test_byte = in_data[current_byte]
+                    current_byte += 1
+                    if test_byte == table_index:
+                        table_index += 1
+                        token -= 1
+                        test_byte = in_data[current_byte]
+                        current_byte += 1
+                    table1[table_index] = test_byte
+                    table2[table_index] = in_data[current_byte]
+                    current_byte += 1
+            table_index += 1
+
+        if table_index == 256:
+            out_bin = bytearray()
+            comp_bin = in_data[current_byte:current_byte + seg_size]
+            current_byte += seg_size
+            token_stack = []
+            for token in comp_bin:
+                #token = token.to_bytes(1, byteorder="big")
+                token_stack.append(token)
+                while token_stack:
+                    temp_token = token_stack.pop(-1)
+                    if temp_token == table1[temp_token]:
+                        out_bin.extend([temp_token])
+                    else:
+                        token_stack.append(table2[temp_token])
+                        token_stack.append(table1[temp_token])
+            return_bytes.extend(out_bin)
+        else:
+            print(f"Invalid file.")
+            return None
 
     return return_bytes
 

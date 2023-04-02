@@ -56,8 +56,8 @@ def main(args):
                 quit(f"Couldn't output deciphered.bin. Error: {e}.")
 
             # Decompress the third stage bootloader.
-            decompressed = qnxdd.decomp_enigma(args.working_dir[0] + "/deciphered.bin",
-                                QNX_DATA_BOOTLOADER_OFFSET)
+            decompressed = qnxdd.decomp_enigma(deciphered[QNX_DATA_BOOTLOADER_OFFSET:])
+
             try:
                 with open(args.working_dir[0] + "/boot_stage_3.bin", "wb") as out_f:
                     out_f.write(decompressed)
