@@ -147,7 +147,6 @@ def main(args):
                     print(f"Invalid command.")
                     script_fault = True if script_buffer else False
 
-        # TODO: detect a script fault and bail
         if script_fault:
             quit(f"Aborted: there was an error executing the provided script.")
 
@@ -156,7 +155,8 @@ def main(args):
         else:
             command = input(f"ramdisk:{ramdisk.pwd()}$ ")
 
-    quit(f"Errors were avoided.")
+    print(f"Errors were avoided.")
+    quit(0)
 
 
 if __name__ == "__main__":
