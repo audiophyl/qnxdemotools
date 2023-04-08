@@ -1,5 +1,34 @@
 #!/usr/bin/env bash
 
+set -o errexit
+trap cleanup EXIT
+
+cleanup() {
+    last_command=$BASH_COMMAND
+    exit_code=$?
+    if [ $exit_code -gt 0 ]
+    then
+        echo "\"${last_command}\" exited with code $exit_code."
+    fi
+    echo "Tidying up..."
+    rm Dev
+    rm Dev.pty
+    rm pterm
+    rm ksh
+    rm index.html
+    rm pwm.menu
+    rm s_00
+    rm s_01
+    rm s_02
+    rm s_03
+    rm qnxdemo.dat
+    rm image1.z
+    rm xip.z
+    rm image2.z
+    rm working/*
+    rmdir working
+}
+
 echo "Unzipping demo_mod_files.zip..."
 unzip demo_mod_files.zip
 
@@ -37,21 +66,3 @@ echo "Repacking QNX Demodisk v4.05 parts..."
 ./dexordd.py -i qnxdemo.dat -w working -m pack
 
 mv working/qnxdemo_repack.dat ./
-
-echo "Tidying up..."
-rm Dev
-rm Dev.pty
-rm pterm
-rm ksh
-rm index.html
-rm pwm.menu
-rm s_00
-rm s_01
-rm s_02
-rm s_03
-rm qnxdemo.dat
-rm image1.z
-rm xip.z
-rm image2.z
-rm working/*
-rmdir working
