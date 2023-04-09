@@ -4,14 +4,13 @@ of the QNX Demodisk released in the 90s and its associated extensions.
 """
 
 __author__ = "Philip Barton"
-__version__ = "1.7.0"
+__version__ = "1.7.1"
 __license__ = "MIT"
 
 
 import bz2
 import math
 import binascii
-from more_itertools import ilen
 
 
 XOR_KEY = [31, 67, 96, 109, 31, 71, 104, 107, 99, 100, 97, 113, 96, 109, 99,
@@ -1011,9 +1010,7 @@ class Entry:
         if len(in_name) >= self.NAME_LENGTH:
             in_name = in_name[0:self.NAME_LENGTH]
 
-        invalid = ilen(filter(self._is_invalid_char, in_name.encode('ascii')))
-
-        if invalid:
+        if len(list(filter(self._is_invalid_char, in_name.encode('ascii')))):
             return
 
         if self.etype == "dir" or self.etype == "file":
