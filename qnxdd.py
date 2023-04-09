@@ -32,6 +32,7 @@ def xor_cipher(in_data):
     """
 
     in_data_len = len(in_data)
+    out_data = bytearray(in_data_len)
     xor_key_len = len(XOR_KEY)
     offset = 0
 
@@ -39,11 +40,11 @@ def xor_cipher(in_data):
         segment_len = SEGMENT_SIZE if offset + SEGMENT_SIZE < in_data_len else in_data_len - offset
 
         for i in range(segment_len):
-            in_data[offset + i] ^= XOR_KEY[i % xor_key_len]
+            out_data[offset + i] = in_data[offset + i] ^ XOR_KEY[i % xor_key_len]
 
         offset += segment_len
 
-    return in_data
+    return out_data
 
 
 def decomp_enigma(in_data):
