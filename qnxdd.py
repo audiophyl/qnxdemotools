@@ -13,6 +13,9 @@ import math
 import binascii
 
 
+# XOR_KEY is the ASCII values of " Dan Hildebrand creator of demodisk " with
+# each character shifted -1. If you can read machine code, everything is open
+# source! ;)
 XOR_KEY = [31, 67, 96, 109, 31, 71, 104, 107, 99, 100, 97, 113, 96, 109, 99,
            31, 98, 113, 100, 96, 115, 110, 113, 31, 110, 101, 31, 99, 100, 108,
            110, 99, 104, 114, 106, 31]
