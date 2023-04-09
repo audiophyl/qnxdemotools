@@ -4,13 +4,12 @@ of the QNX Demodisk released in the 90s and its associated extensions.
 """
 
 __author__ = "Philip Barton"
-__version__ = "1.7.2"
+__version__ = "1.7.3"
 __license__ = "MIT"
 
 
 import bz2
 import math
-import binascii
 
 
 # XOR_KEY is the ASCII values of " Dan Hildebrand creator of demodisk " with
@@ -251,7 +250,7 @@ class Ramdisk:
         print(f"{'Sector: ' : <10}{self._sector_size : >8} bytes")
         print(f"{'Free: ' : <10}{self._get_free() : >8} bytes")
         sector_map = self._raw[self.SECTOR_MAP_START:self.SECTOR_MAP_START + (self._size // (self._sector_size * 8))]
-        print(f"{'Map: ' : <10}{binascii.hexlify(sector_map)}")
+        print(f"{'Map: ' : <10}{bytes(sector_map).hex()}")
 
 
     def _alloc(self, in_request):
@@ -833,14 +832,14 @@ class Ramdisk:
             Args:
                 in_entry (str): Name of Entry to retrieve.
 
-            Returns (str): Hexlify'd raw Entry data.
+            Returns (str): Hex string of raw Entry data.
         """
 
         etypes = ["link", "dir", "file"]
         for etype in etypes:
             entry = self._get_entry(in_entry, etype)
             if entry != None:
-                return binascii.hexlify(entry.raw)
+                return bytes(entry.raw).hex()
         return None
     
 
