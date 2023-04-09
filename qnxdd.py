@@ -4,7 +4,7 @@ of the QNX Demodisk released in the 90s and its associated extensions.
 """
 
 __author__ = "Philip Barton"
-__version__ = "1.7.1"
+__version__ = "1.7.2"
 __license__ = "MIT"
 
 
@@ -209,7 +209,6 @@ class Ramdisk:
     ENTRY_SIZE_MAGIC = 105
 
     # This is a list of known flags observed in a stock ramdisk.
-    # 
     KNOWN_FLAGS = [0x81fd, 0x81a4, 0x81b4, 0x41fd]
 
 
@@ -308,7 +307,6 @@ class Ramdisk:
 
         # examine the first four bytes ('next' pointer) of every sector.
         sector_headers = []
-        #sector_free = [True] * (self._size // self._sector_size)
         test_sector = 0
         while test_sector * self._sector_size < len(self._raw):
             tmp_offset = test_sector * self._sector_size
