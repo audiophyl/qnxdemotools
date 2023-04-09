@@ -346,18 +346,17 @@ class Ramdisk:
                 in_dir (Entry): An Entry representing the directory to be
                     listed.
 
-            Returns ([Entry]): A list containing Entry objects.
+            Yields ([Entry]): A generator for Entry objects.
         """
 
-        entries = []
+
         sectors = self._get_sector_list(in_dir)
         for sector in sectors:
             raw_directory = self._raw[sector + 4:sector + self._sector_size - 4]
             num_entries = len(raw_directory) // Entry.ENTRY_SIZE
             for entry in range(0, num_entries):
                 tmp_entry = Entry(raw_directory[(Entry.ENTRY_SIZE * entry):(Entry.ENTRY_SIZE * entry) + Entry.ENTRY_SIZE])
-                entries.append(tmp_entry)
-        return entries
+                yield tmp_entry
     
 
     def _entry_exists(self, in_name):
@@ -472,17 +471,19 @@ class Ramdisk:
 
         # List all sectors occupied by directory info.
         sectors = self._get_sector_list(self._path[-1])
-        # List containing every Entry in this directory.
+        # Generator containing every Entry in this directory.
         entries = self._get_dir_contents(self._path[-1])
         # The first two Entry objects are links.
-        links = entries[0:2]
+        links = [next(entries), next(entries)]
+        #links = entries[0:2]
         # Empty lists for dir and file Entry types.
         dirs = []
         files = []
 
         # Iterate over entries in the directory, creating Entry objects and
         # separating them out to either the 'dirs' or 'files' lists.
-        for entry in entries[2:]:
+        #for entry in entries[2:]:
+        for entry in entries:
             if entry.etype == "file":
                 files.append(entry)
             elif entry.etype == "dir":
