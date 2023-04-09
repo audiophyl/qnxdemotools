@@ -475,7 +475,6 @@ class Ramdisk:
         entries = self._get_dir_contents(self._path[-1])
         # The first two Entry objects are links.
         links = [next(entries), next(entries)]
-        #links = entries[0:2]
         # Empty lists for dir and file Entry types.
         dirs = []
         files = []
