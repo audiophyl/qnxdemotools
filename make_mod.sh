@@ -3,7 +3,8 @@
 set -o errexit
 trap cleanup EXIT
 
-WORKING_DIR=$(mktemp -d)
+CURRENT_DIR=$(pwd)
+TMP_DIR=$(mktemp -d)
 
 cleanup() {
     last_command=$BASH_COMMAND
@@ -12,58 +13,46 @@ cleanup() {
     then
         echo "\"${last_command}\" exited with code $exit_code."
     fi
+    cd "${CURRENT_DIR}"
     echo "Tidying up..."
-    rm Dev
-    rm Dev.pty
-    rm pterm
-    rm ksh
-    rm index.html
-    rm pwm.menu
-    rm s_00
-    rm s_01
-    rm s_02
-    rm s_03
-    rm qnxdemo.dat
-    rm image1.z
-    rm xip.z
-    rm image2.z
-    rm -rf "${WORKING_DIR}"
+    rm -rf "${TMP_DIR}"
 }
 
 echo "Unzipping demo_mod_files.zip..."
-unzip demo_mod_files.zip
+unzip demo_mod_files.zip -d "${TMP_DIR}"
+
+echo "Changing to ${TMP_DIR} to operate..."
+cd "${TMP_DIR}"
 
 echo "Unpacking QNX Demodisk v4.05 parts..."
-./dexordd.py -i qnxdemo.dat -w "${WORKING_DIR}" -m unpack
+"${CURRENT_DIR}/dexordd.py" -i qnxdemo.dat -w "${TMP_DIR}" -m unpack
 
 echo "Dumping qzip files from BASE ramdisk..."
-./qnxddcli.py -i "${WORKING_DIR}/boot_fs.ramdisk" -s s_00
+"${CURRENT_DIR}/qnxddcli.py" -i "${TMP_DIR}/boot_fs.ramdisk" -s s_00
 
 echo "Decompressing ramdisks..."
-./qzip.py -i image1.z
+"${CURRENT_DIR}/qzip.py" -i image1.z
 rm image1.z
-./qzip.py -i image2.z
+"${CURRENT_DIR}/qzip.py" -i image2.z
 rm image2.z
 
 echo "Removing pesky bits from image1.ramdisk..."
-./qnxddcli.py -i image1.ramdisk -s s_01
+"${CURRENT_DIR}/qnxddcli.py" -i image1.ramdisk -s s_01
 
 echo "Removing pesky bits from xip.ramdisk..."
-./decool.py -i xip.z
+"${CURRENT_DIR}/decool.py" -i xip.z
 
 echo "Performing magic edit on image2.ramdisk..."
-./qnxddcli.py -i image2.ramdisk -s s_02
+"${CURRENT_DIR}/qnxddcli.py" -i image2.ramdisk -s s_02
 
 echo "Compressing ramdisks..."
-./qzip.py -i image1.ramdisk
-rm image1.ramdisk
-./qzip.py -i image2.ramdisk
-rm image2.ramdisk
+"${CURRENT_DIR}/qzip.py" -i image1.ramdisk
+"${CURRENT_DIR}/qzip.py" -i image2.ramdisk
 
 echo "Preparing boot_fs.ramdisk..."
-./qnxddcli.py -i "${WORKING_DIR}/boot_fs.ramdisk" -s s_03
+"${CURRENT_DIR}/qnxddcli.py" -i "${TMP_DIR}/boot_fs.ramdisk" -s s_03
 
 echo "Repacking QNX Demodisk v4.05 parts..."
-./dexordd.py -i qnxdemo.dat -w "${WORKING_DIR}" -m pack
+"${CURRENT_DIR}/dexordd.py" -i qnxdemo.dat -w "${TMP_DIR}" -m pack
 
-mv "${WORKING_DIR}/qnxdemo_repack.dat" ./
+mv "${TMP_DIR}/qnxdemo_repack.dat" "${CURRENT_DIR}/"
