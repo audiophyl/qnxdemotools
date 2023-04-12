@@ -10,11 +10,11 @@ Use to unpack/pack files from/into the QNX demodisk from the 90s.
 
 
 __author__ = "Philip Barton"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __license__ = "MIT"
 
 
-import os
+import pathlib
 import argparse
 import textwrap
 import qnxdd
@@ -29,13 +29,15 @@ QNX_PACK_FILENAME = "/qnxdemo_repack.dat"
 def main(args):
     """ Main entry point of the app """
     if args.mode[0] == "unpack":
-        try:
-            os.mkdir(args.working_dir[0], 0o755)
-        except OSError as e:
-            print(f"Error creating directory '{args.working_dir[0]}':")
-            print(f"{e}")
+        working_dir = pathlib.Path(args.working_dir[0])
+        if not working_dir.exists():
+            try:
+                working_dir.mkdir()
+            except OSError as e:
+                print(f"Error creating directory '{args.working_dir[0]}': {e}")
+                quit(1)
         
-        if os.path.isdir(args.working_dir[0]):
+        if working_dir.is_dir():
             input_file = bytearray()
 
             try:
