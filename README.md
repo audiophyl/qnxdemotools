@@ -21,6 +21,14 @@ The best way to run the demo today is via QEMU, which implements one of the thre
 qemu-system-i386 -device tulip -drive format=raw,if=floppy,file=qnxdemo.dat
 ```
 
+Curious OSX users will need to install qemu via Homebrew:
+
+```
+brew install qemu
+```
+
+It may also be necessary for OSX users to use the full path when running qemu-system-i386. Many thanks to Andy for testing this out for me.
+
 ## Okay... What??
 I'm glad you asked! Here are the important things to know:
 
