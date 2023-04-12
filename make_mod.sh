@@ -3,6 +3,8 @@
 set -o errexit
 trap cleanup EXIT
 
+WORKING_DIR=$(mktemp -d)
+
 cleanup() {
     last_command=$BASH_COMMAND
     exit_code=$?
@@ -25,18 +27,17 @@ cleanup() {
     rm image1.z
     rm xip.z
     rm image2.z
-    rm working/*
-    rmdir working
+    rm -rf "${WORKING_DIR}"
 }
 
 echo "Unzipping demo_mod_files.zip..."
 unzip demo_mod_files.zip
 
 echo "Unpacking QNX Demodisk v4.05 parts..."
-./dexordd.py -i qnxdemo.dat -w working -m unpack
+./dexordd.py -i qnxdemo.dat -w "${WORKING_DIR}" -m unpack
 
 echo "Dumping qzip files from BASE ramdisk..."
-./qnxddcli.py -i working/boot_fs.ramdisk -s s_00
+./qnxddcli.py -i "${WORKING_DIR}/boot_fs.ramdisk" -s s_00
 
 echo "Decompressing ramdisks..."
 ./qzip.py -i image1.z
@@ -60,9 +61,9 @@ rm image1.ramdisk
 rm image2.ramdisk
 
 echo "Preparing boot_fs.ramdisk..."
-./qnxddcli.py -i working/boot_fs.ramdisk -s s_03
+./qnxddcli.py -i "${WORKING_DIR}/boot_fs.ramdisk" -s s_03
 
 echo "Repacking QNX Demodisk v4.05 parts..."
-./dexordd.py -i qnxdemo.dat -w working -m pack
+./dexordd.py -i qnxdemo.dat -w "${WORKING_DIR}" -m pack
 
-mv working/qnxdemo_repack.dat ./
+mv "${WORKING_DIR}/qnxdemo_repack.dat" ./
