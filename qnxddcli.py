@@ -6,13 +6,11 @@
 
     Typical usage examples:
 
-    qnxddcli.py -i working/base_fs.ramdisk -s quick_edits
-
-    Script files require a trailing newline to ensure the final command is run.
+    qnxddcli.py -i working/base_fs.ramdisk -s script_file
 """
 
 __author__ = "Philip Barton"
-__version__ = "1.4.0"
+__version__ = "1.5.0"
 __license__ = "MIT"
 
 MIN_PYTHON = (3, 10)    # This code makes use of match/case, so Python 3.10+
@@ -24,26 +22,37 @@ import sys
 from qnxdd import Ramdisk
 
 
+def script_buffer(in_file):
+    try:
+        with open(in_file, "r") as in_f:
+            while True:
+                line = in_f.readline()
+                if len(line) == 0:
+                    break
+                else:
+                    yield line.strip()
+    except Exception as e:
+        print(f"Error while reading script: {e}")
+        quit(1)
+
+
 def main(args):
-    """ CLI loop """
+    """ Prep for CLI loop """
     try:
         ramdisk = Ramdisk(args.input_file[0])
     except Exception as e:
         quit(f"Error: {e}.")
 
-    script_buffer = []
+    script = None
     script_fault = False
 
     if args.script_file:
-        try:
-            with open(args.script_file[0], "r") as in_f:
-                script_buffer = in_f.read().split('\n')
-        except Exception as x:
-            quit(f"Error while reading script: {x}")
-        command = script_buffer.pop(0)
+        script = script_buffer(args.script_file[0])
+        command = next(script)
     else:
         command = "welcome"
 
+    """ CLI loop """
     while command != "exit":
         command = command.split("#")[0]
         command = command.split(" ")
@@ -59,7 +68,7 @@ def main(args):
                     print(f"Attempting to dump '{command[1]}'...")
                     if not ramdisk.dump(command[1]):
                         print(f"Unable to dump {command[1]}.")
-                        script_fault = True if script_buffer else False
+                        script_fault = True if script else False
             
             case "cd":
                 if len(command) == 1:
@@ -67,7 +76,7 @@ def main(args):
                 else:
                     if not ramdisk.cd(command[1]):
                         print(f"Invalid directory.")
-                        script_fault = True if script_buffer else False
+                        script_fault = True if script else False
 
             case "info":
                 ramdisk.info()
@@ -78,7 +87,7 @@ def main(args):
                 else:
                     if not ramdisk.rm(command[1]):
                         print(f"Invalid file {command[1]}.")
-                        script_fault = True if script_buffer else False
+                        script_fault = True if script else False
             
             case "rmdir":
                 if len(command) == 1:
@@ -86,7 +95,7 @@ def main(args):
                 else:
                     if not ramdisk.rmdir(command[1]):
                         print(f"Couldn't delete directory {command[1]}.")
-                        script_fault = True if script_buffer else False
+                        script_fault = True if script else False
 
             case "inject":
                 if len(command) == 1:
@@ -94,7 +103,7 @@ def main(args):
                 else:
                     if not ramdisk.inject(command[1]):
                         print(f"Error injecting file {command[1]}.")
-                        script_fault = True if script_buffer else False
+                        script_fault = True if script else False
 
             case "flags":
                 if len(command) < 3:
@@ -102,7 +111,7 @@ def main(args):
                 else:
                     if not ramdisk.flags(command[1], command[2]):
                         print(f"Error setting flags for {command[1]}.")
-                        script_fault = True if script_buffer else False
+                        script_fault = True if script else False
 
             case "commit":
                 ramdisk.commit(args.input_file[0])
@@ -119,7 +128,7 @@ def main(args):
                         print(f"'{command[1]}': {entry}")
                     else:
                         print(f"No entry '{command[1]}'.")
-                        script_fault = True if script_buffer else False
+                        script_fault = True if script else False
 
             case "listfree":
                 print(f"Free sectors: {ramdisk.listfree()}")
@@ -145,15 +154,12 @@ def main(args):
             case _:
                 if not (len(command) == 1 and command[0] == ""):
                     print(f"Invalid command.")
-                    script_fault = True if script_buffer else False
+                    script_fault = True if script else False
 
         if script_fault:
             quit(f"Aborted: there was an error executing the provided script.")
 
-        if script_buffer:
-            command = script_buffer.pop(0)
-        else:
-            command = input(f"ramdisk:{ramdisk.pwd()}$ ")
+        command = next(script) if script else input(f"ramdisk:{ramdisk.pwd()}$ ")
 
     print(f"Errors were avoided.")
     quit(0)
