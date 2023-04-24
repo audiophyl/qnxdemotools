@@ -3,7 +3,7 @@
 set -o errexit
 trap cleanup EXIT
 
-PROJECT_ROOT="$(dirname -- "$(readlink -f "${BASH_SOURCE[0]}")")"
+PROJECT_ROOT="$(dirname "$(dirname -- "$(readlink -f "${BASH_SOURCE[0]}")")")"
 SRC_DIR="${PROJECT_ROOT}/src"
 BUILD_DIR="${PROJECT_ROOT}/build"
 TMP_DIR=$(mktemp -d)
