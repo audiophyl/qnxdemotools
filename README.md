@@ -17,7 +17,7 @@ If you'd like to know more about the QNX Demodisk, [OpenQNX](https://openqnx.com
 
 The best way to run the demo today is via QEMU, which implements one of the three supported network adapters (DEC's "tulip" chipset). VMWare does not implement any of the three supported network adapters (tulip, 3c509, or ne2k). Here is a one-liner for Linux users to use for QEMU:
 
-```
+```shell
 qemu-system-i386 -device tulip -drive format=raw,if=floppy,file=qnxdemo.dat
 ```
 
@@ -35,7 +35,7 @@ I'm glad you asked! Here are the important things to know:
 ### dexordd.py
 This program is used to de-XOR the demodisk. De-XOR the DD, get it? It is invoked like this:
 
-```
+```shell
 ./dexordd.py -i qnxdemo.dat -w working_dir -m unpack
 ```
 
@@ -43,7 +43,7 @@ Running dexordd.py like this will split qnxdemo.dat into its constituent parts, 
 
 But let's say you've already done this and would like to repack your edited files... Well, invoke dexordd.py like this:
 
-```
+```shell
 ./dexordd.py -i destination_file.dat -w working_dir -m pack
 ```
 This will use the files in working_dir to make a new image having the name destination_file.dat.
@@ -51,7 +51,7 @@ This will use the files in working_dir to make a new image having the name desti
 ### qzip.py
 This program is used to compress/decompress QNX's ".z", ramdisk, and QNXDE files. It is invoked like this:
 
-```
+```shell
 ./qzip.py -i filename.ext
 ```
 
@@ -60,7 +60,7 @@ It will do the right thing based on the filename extension. If the extension is 
 ### decool.py
 This program is used to remove the "QNX IS COOL" demo from the xip.z file on the demodisk. Included in the comments within the file are offsets and other important information for removing other executables contained within the XIP. It is invoked like this:
 
-```
+```shell
 ./decool.py -i filename.ext
 ```
 
@@ -69,7 +69,7 @@ It really only makes sense for the input file to be 'xip.z'. Be aware that, just
 ### qnxddcli.py
 This program is an interactive shell for working with a QNX Demodisk ramdisk. It is invoked like this:
 
-```
+```shell
 ./qnxddcli.py -i image.ramdisk [-s script_file] 
 ```
 
